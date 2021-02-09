@@ -1,5 +1,7 @@
 package com.chberndt.liferay.service.wrapper;
 
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalServiceWrapper;
@@ -10,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Christian Berndt
@@ -32,8 +35,6 @@ public class LayoutLocalServiceOverride extends LayoutLocalServiceWrapper {
 			Map<Locale, String> friendlyURLMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		System.out.println("LayoutLocalServiceOverride.addLayout()");
-
 		return super.addLayout(
 			userId, groupId, privateLayout, parentLayoutId, classNameId,
 			classPK, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
@@ -42,13 +43,21 @@ public class LayoutLocalServiceOverride extends LayoutLocalServiceWrapper {
 	}
 
 	@Override
-	public Layout getLayout(long plid) throws PortalException {
+	public Layout deleteLayout(Layout layout) throws PortalException {
 
-		//    	System.out.println("Getting layout by plid " + plid);
+		// Check whether an article exists with the layout's uuid as articleId
 
-		// TODO Auto-generated method stub
+		JournalArticle article = _journalArticleLocalService.fetchArticle(
+			layout.getGroupId(), layout.getUuid());
 
-		return super.getLayout(plid);
+		if (article != null) {
+			_journalArticleLocalService.deleteArticle(article);
+		}
+
+		return super.deleteLayout(layout);
 	}
+
+	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
 
 }
